@@ -9,6 +9,7 @@ void forward(int time) {
     mav(2, 1000);
     mav(3, 1000);
     msleep(time);
+    ao();
 }
 
 void backward(int time) {
@@ -17,6 +18,7 @@ void backward(int time) {
     mav(2, -1000);
     mav(3, -1000);
     msleep(time);
+    ao();
 }
 
 void left(int time) {
@@ -25,6 +27,7 @@ void left(int time) {
     mav(2, 1000);
     mav(3, -1000);
     msleep(time);
+    ao();
 }
 
 void right(int time) {
@@ -33,6 +36,7 @@ void right(int time) {
     mav(2, -1000);
     mav(3, 1000);
     msleep(time);
+    ao();
 }
 
 
@@ -47,28 +51,19 @@ void turn_angle(int angle) {
     }
     
     float time = (float)FULL_TURN_TIME;
+    printf("%f -> ", time);
     time = time / 360.0; // Ensure floating-point division
+    printf("%f -> ", time);
     time = time * (float)angle;
+    printf("%f -> ", time);
     time = time * 1000.0; // Ensure correct scaling
-    
+    printf("%f\n", time);
+
     
     mav(0, 1000 * direction);
     mav(1, 1000 * direction);
     mav(2, -1000 * direction);
     mav(3, -1000 * direction);
     msleep(time);
+    ao();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
