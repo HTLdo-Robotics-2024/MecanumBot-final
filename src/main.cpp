@@ -1,21 +1,10 @@
 #include <kipr/wombat.h>
 #include "mycanum.hpp"
-
-//constants
-#define pi 3.1415926535897932384626433832795028841971693993751
-
-
-//port variables
-int light_sensor_port = 0;
-int hand_servo_port = 1;
-int arm_servo_port = 0;
-
+#include "config.h"
 
 //general variables
-int hand_open_value = 1000;
-int hand_closed_value = 0;
-int arm_up_value = 730;
-int arm_down_value = 2048;
+
+
 
 
 
@@ -28,33 +17,37 @@ void relocate_bottle(int bottle_id);
 //helper functions
 int lerp(int a, int b, float t);
 
+void set_servo_position_slow(int servo, int pos1, int duration);
+
 
 int main()
 {
     printf("One small stroll for a robot, one big stroll for KuKuk\n");
     enable_servos();
+    
     start();
-    //remove_poms();
+    
+    remove_poms();
     
     relocate_bottle(1);
-
+	
     return 0;
 }
 
 /*main functions*/
 void start() {
-    set_servo_position(hand_servo_port, hand_closed_value);
-    set_servo_position(arm_servo_port, arm_up_value);
+    set_servo_position(hand, closed);
+    set_servo_position(arm, up);
 
-    /*int light_value = 0;
+    int light_value = 0;
 
     while (1) {
-        light_value = analog(light_sensor_port);
+        light_value = analog(light_sensor);
         if (light_value <= 2000) {
             printf("Light Activation B)\n");
             break;
         }
-    }*/
+    }
 
 
     /*
@@ -64,15 +57,15 @@ void start() {
     * the bot ends up facing the +X axis
     */
 
-    left(1500);
-    turn_angle(-3);
+    left(1000);
+    //turn_angle(-3);
 }
 
 
 void remove_poms() {
 
     //all in the row
-    forward(13000);
+    forward(8666);
     ao();
     //pushing them aside
     mav(0, 1000);
@@ -85,11 +78,11 @@ void remove_poms() {
     msleep(4000);
     ao();
     //the other two
-    backward(6000);
-    left(2500);
-    forward(1250);
-    right(2500);
-    backward(7500);
+    backward(4000);
+    left(1666);
+    forward(833);
+    right(1666);
+    backward(5000);
     
     /*re-align with wall(s)*/
     backward(1000);
@@ -99,7 +92,10 @@ void remove_poms() {
 
 
 void relocate_bottle(int bottle_id) {
-	/* bottles (looking in +Y)
+    set_servo_position(hand, closed);
+    set_servo_position(arm, up);
+    
+    /* bottles (looking in +Y)
     * 4  5  6
     * 1  2  3
     */
@@ -109,20 +105,38 @@ void relocate_bottle(int bottle_id) {
     int x_distance = ((bottle_id + 2) % 3) + 1;
     int y_distance = bottle_id / 4 + 1; //integer division default: floor
     
-    int distance_multiplier = 2000;
+    int distance_multiplier = 200;
     
     printf("x: %d, y: %d\n", x_distance, y_distance);
     
     
-    forward(5500);
-    msleep(2000);
+    //go to the general bottle position
+    left(2500);
+    forward(3500);
+    msleep(1000);
     
+    //grab bottle)
     forward(x_distance*distance_multiplier);
-    msleep(1000);
-    turn_angle(90);
-    msleep(1000);
-    forward(y_distance*distance_multiplier);
+	turn_angle(90);
 
+    set_servo_position_slow(hand, open, 1000);
+    set_servo_position_slow(arm, middle, 2000);
+    
+    forward(y_distance*distance_multiplier);
+    msleep(1000);
+    
+    set_servo_position_slow(hand, semi_closed, 5000);
+    set_servo_position_slow(arm, up, 5000);
+    
+    
+    
+	backward(y_distance*distance_multiplier);  
+    turn_angle(-90);
+    backward(4000);
+    right(4000);
+    
+    set_servo_position(hand, semi_closed);
+    set_servo_position(arm, up);
 }
 
 
@@ -135,7 +149,26 @@ int lerp(int a, int b, float t) {
 }
 
 
+void set_servo_position_slow(int servo, int pos1, int duration) {
+    int pos0 = get_servo_position(servo);
 
+    int num_steps = abs(pos1 - pos0);
+    int time_step = duration / num_steps;
+
+    if (pos1 >= pos0) {
+        printf("%d > %d", pos1, pos0);
+        for (int pos = pos0; pos < pos1; pos++) {
+            set_servo_position(servo, pos);
+            msleep(time_step);
+        }
+    } else {
+        for (int pos = pos0; pos >= pos1; pos--) {
+            set_servo_position(servo, pos);
+            msleep(time_step);
+        }
+    }
+
+}
 
 
 
